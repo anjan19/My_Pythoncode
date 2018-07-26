@@ -1,0 +1,228 @@
+/home/anjanvlsi8432/anjan/categories
+/user/anjanvlsi8432/sqoop_import/retail_db/order_items
+/user/anjanvlsi8432/sqoop_import/retail_db/orders
+
+Convert local data to collection using python and then convert them to spark RDD, then do actions
+
+>>> productraw=open("/home/anjanvlsi8432/anjan/products/part-m-00000").read().splitlines()
+>>> type(productraw)
+<type 'list'>
+>>> productRDD=sc.parallelize(productraw)
+>>> type(productraw)
+<type 'list'>
+>>> productRDD.first()
+
+To read json file from specified path
+
+sqlContext.load("/home/anjanvlsi8432/anjan/categories","json").show()
+sqlContext.read,json("/home/anjanvlsi8432/anjan/categories").show()
+
+Row level ternsormations using map
+
+orders.map(lambda o: int(o.split(",")[1].split(" ")[0].replace("-",""))).first()
+
+assign 1 to each status
+orders.map(lambda o:(o.split(",")[3],1)).first()
+
+Conserting to ke,value pairs before proceeding for grouping and aggregations
+
+orderitems.map(lambda io: (int(io.split(",")[1]),float(io.split(",")[4]))).take(10)
+
+Using flatMap function 
+
+word=line.flatMap(lambda l:l.split(" "))
+
+Filter:
+
+>>> orders=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/orders")
+KeyboardInterrupt
+>>> orderscomplete=orders.filter(lambda o:o.split(",")[3]=="COMPLETE")
+>>> orders.count() --68886
+>>> orderscomplete.count()--22899
+
+>>> orderscomplete=orders.filter(lambda o:(o.split(",")[3]=="COMPLETE" or o.split(",")[3]=="CLOSED") and o.split(",")[1][:7]=="2014-01")
+or
+orderscomplete=orders.filter(lambda o:o.split(",")[3] in  ["COMPLETE","CLOSED"] and o.split(",")[1][:7]=="2014-01")
+
+Joins
+
+>>> ordersmap=orders.map(lambda o:(int(o.split(",")[0]),o.split(",")[1]))
+>>> ordritmap=orderitems.map(lambda o:(int(o.split(",")[1]),float(o.split(",")[4])))
+>>> ordersjoin=ordersmap.join(ordritmap)
+>>> for i in ordersjoin.take(10): print(i)
+
+left outer join and filter
+
+>>>ordreleftjoin=ordermap.leftOuterJoin(orderitemmap)
+>>>orderjoinfilter=ordreleftjoin.filter(lambda o: o[1][1]==None)
+>>> for i in orderjoinfilter.take(10): print(i)
+
+Right outer join
+>>> orderrjoin=orderitemmap.rightOuterJoin(ordermap)
+>>> for i in orderrjoin.take(10): print(i)
+
+Aggrgate functions
+
+reduce
+
+>>> orderitems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+>>> orderitemfilter=orderitems.filter(lambda o: int(o.split(",")[1])==2)
+>>> orderitemsubtot=orderitemfilter.map(lambda o: float(o.split(",")[4]))
+>>> from operator import add
+>>> orderitemsubtot.reduce(add)
+or
+>>> orderitemsubtot.reduce(lambda x,y:x+y)
+
+getting min sub total
+>>> orderitems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+>>> orderitemfilter=orderitems.filter(lambda o: int(o.split(",")[1])==2)
+>>> orderitemfilter.reduce(lambda x,y: x if (float(x.split(",")[4])<float(y.split(",")[4])) else y)
+
+
+Using countByKey
+
+>>> orders=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/orders")
+>>> orderstatus=orders.map(lambda o:(o.split(",")[3],1))
+>>> orderstscnt=orderstatus.countByKey()
+orderstscnt is a python's dict
+
+Using groupByKey
+
+1st ex:
+
+>>> orderitems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+>>> orderitemsmap=orderitems.map(lambda o:(int(o.split(",")[1]),float(o.split(",")[4])))
+>>> orderstsbyordid=orderitemsmap.groupByKey()
+>>> revnbyorderid=orderstsbyordid.map(lambda o:(o[0],sum(o[1])))
+>>> for i in revnbyorderid.take(10): print(i)
+
+2nd ex:
+
+>>> orderitems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+>>> orderitemmap=orderitems.map(lambda o:(o.split(",")[1],o))
+>>> for i in orderitemmap.take(10): print(i)
+>>> orderitemgrpbykey=orderitemmap.groupByKey()
+>>> for i in orderitemgrpbykey.take(10): print(i)
+sorted
+>>> sorted(l[1],key=lambda o:float(o.split(",")[4]),reverse=True)
+>>> orderitemsortedBysubtot=orderitemgrpbykey.map(lambda o:sorted(o[1],key=lambda k:float(k.split(",")[4]),reverse=True))
+>>> for i in orderitemsortedBysubtot.take(10): print(i)
+
+use flatMap now
+
+>>> orderitemsortedBysubtot=orderitemgrpbykey.flatMap(lambda o:sorted(o[1],key=lambda k:float(k.split(",")[4]),reverse=True))
+>>> for i in orderitemsortedBysubtot.take(10): print(i)
+
+
+Using reduceByKey
+
+>>> orderitems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+>>> orderitemsmap=orderitems.map(lambda o:(int(o.split(",")[1]),float(o.split(",")[4])))
+>>> for i in orderitemsmap.take(10): print(i)
+>>> revbyOrderid=orderitemsmap.reduceByKey(lambda x,y:x+y)
+>>> for i in revbyOrderid.take(10): print(i)
+else import operator 
+
+
+>>> from operator import add
+>>> revbyOrderid=orderitemsmap.reduceByKey(add)
+
+to get min subtotal by orderId
+
+>>> minsubtotperOrdId=orderitemsmap.reduceByKey(lambda x,y: x if(x<y) else y)
+>>> for i in minsubtotperOrdId.take(10): print(i)
+
+to get min subtotal by orderId with complete details
+
+Using aggregateByKey
+
+>>> orderitems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+>>> orderitemsmap=orderitems.map(lambda o:(int(o.split(",")[1]),float(o.split(",")[4])))
+>>> revenuebyorder=orderitemsmap.aggregateByKey((0.0,0),lambda x,y:(x[0]+y,x[1]+1),lambda x,y:(x[0]+y[0],x[1]+y[1]))
+>>> for i in revenuebyorder.take(10): print(i)
+
+Simple Sorting
+
+>>> products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+>>> productFilterMap=products.filter(lambda x: x.split(",")[4]!="").map(lambda x:(float(x.split(",")[4]),x))
+>>> productssortbyprice=productFilterMap.sortByKey()
+>>> for i in productssortbyprice.take(10): print(i)
+>>> productssortedMap=productssortbyprice.map(lambda x:x[1])
+>>> for i in productssortedMap.take(10):print(i)
+
+Composite Sorting
+
+
+>>> products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+>>> productFilterMap=products.filter(lambda x: x.split(",")[4]!="").map(lambda x:((int(x.split(",")[1]),float(x.split(",")[4])),x))
+>>> for i in productFilterMap.take(10):print(i)
+>>> for i in productFilterMap.sortByKey().take(10): print(i) -- sorted by ascending order
+else
+
+ Nagate key to see descingding order results
+
+>>> productFilterMap=products.filter(lambda x: x.split(",")[4]!="").map(lambda x:((int(x.split(",")[1]),-float(x.split(",")[4])),x))
+>>> for i in productFilterMap.take(10):print(i)
+>>> productssorted=productFilterMap.sortByKey().map(lambda p: p[1])
+>>> for i in productssorted.take(100):print(i)
+
+Global Ranking – sortByKey and take
+
+products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+productsMap=products.filter(lambda p:p.split(",")[4]!="").map(lambda p:(float(p.split(",")[4]),p))
+productSort=productsMap.sortByKey(False).map(lambda x:x[1])
+for i in productSort.take(10):print(i)
+
+Global Ranking – takeOrdered or top
+
+products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+productsFilter=products.filter(lambda p:p.split(",")[4]!="")
+productsTop=productsFilter.top(5,lambda x: float(x.split(",")[4]))
+for i in productsTop:print(i)
+
+takeOrderred
+
+productsTop=productsFilter.takeOrdered(5,lambda x: float(x.split(",")[4]))
+for i in productsTop:print(i)
+
+Get Top N Products per category – Introduction
+
+products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+productsFilter=products.filter(lambda p:p.split(",")[4]!="")
+productsMap=productsFilter.map(lambda x:(int(x.split(",")[1]),x))
+productsGroupbyID=productsMap.groupByKey()
+for i in productsGroupbyID.take(10):print(i)
+
+Develop function using Python Collection API
+
+products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+productsFilter=products.filter(lambda p:p.split(",")[4]!="")
+productsMap=productsFilter.map(lambda x:(int(x.split(",")[1]),x))
+productsGroupbyID=productsMap.groupByKey()
+t=productsGroupbyID.first()
+l=sorted(t[1],key=lambda x:float(x.split(",")[4]),reverse=True)
+l[:3]
+
+Invoking function as part of flatMap
+
+products=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+productsFilter=products.filter(lambda p:p.split(",")[4]!="")
+productsMap=productsFilter.map(lambda x:(int(x.split(",")[1]),x))
+productsGroupbyID=productsMap.groupByKey()
+topNproductsbyCat=productsGroupbyID.flatMap(lambda p: sorted(p[1],key=lambda x:float(x.split(",")[4]),reverse=True)[:3])
+for i in topNproductsbyCat.take(10):print(i)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
