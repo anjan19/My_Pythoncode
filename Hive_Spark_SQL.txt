@@ -1,0 +1,468 @@
+HIVE:
+
+Creating tables and loading data
+Creating tables and insert data
+
+Spark SQL or Hive have a bunch of functions to apply transformations on the data.
+
+to see functions
+show functions;
+describe function length;
+
+select length('anjan');
+select order_status,length(order_status) from orders limit 10;
+
+Manipulating Strings
+
+create table cust_anj
+(
+customer_id         int,      
+customer_fname     varchar(45), 
+customer_lname     varchar(45),  
+customer_email     varchar(45),  
+customer_password  varchar(45),  
+customer_street    varchar(255), 
+customer_city      varchar(45),  
+customer_state     varchar(45),  
+customer_zipcode   varchar(45)
+) row format delimited fields terminated by ',' 
+stored as textfile;
+
+load data local inpath '/home/anjanvlsi8432/anjan/customers' into table cust_anj;
+
+substr:
+select substr('anjanmanu',6)
+instr:
+select instr("Hell anjan howru",'');
+Like
+hive (default)> select 'anjan r u there' like 'anjan'
+              > ;
+OK
+false
+Time taken: 0.077 seconds, Fetched: 1 row(s)
+hive (default)> select 'anjan r u there' like 'anjan%';
+OK
+true
+Time taken: 0.069 seconds, Fetched: 1 row(s)
+hive (default)> select lcase('Anjan');
+OK
+anjan
+Time taken: 0.085 seconds, Fetched: 1 row(s)
+hive (default)> select ucase('Anjan');
+OK
+ANJAN
+Time taken: 0.063 seconds, Fetched: 1 row(s)
+hive (default)> select upper('Anjan');
+OK
+ANJAN
+Time taken: 0.073 seconds, Fetched: 1 row(s)
+hive (default)> select lower('Anjan');
+OK
+anjan
+Time taken: 0.065 seconds, Fetched: 1 row(s)
+hive (default)> select initcap('anjan');
+OK
+Anjan
+Time taken: 0.065 seconds, Fetched: 1 row(s)
+hive (default)> select trim(' hello world ');
+OK
+hello world
+Time taken: 0.066 seconds, Fetched: 1 row(s)
+hive (default)> select lpad(12,3,0);
+OK
+012
+Time taken: 0.176 seconds, Fetched: 1 row(s)
+hive (default)> select cast('11' as int);
+OK
+11
+Time taken: 0.2 seconds, Fetched: 1 row(s)
+hive (default)> select cast(substr(order_date,6,2) as int)  from orders limit 10;
+OK
+NULL
+NULL
+NULL
+NULL
+NULL
+7
+7
+7
+7
+7
+hive (default)> select split('hello anjan. how r u'," ");
+OK
+["hello","anjan.","how","r","u"]
+Time taken: 0.103 seconds, Fetched: 1 row(s)
+hive (default)> select split('hello anjan. how r u',' ');
+OK
+["hello","anjan.","how","r","u"]
+Time taken: 0.064 seconds, Fetched: 1 row(s)
+
+Manipulating Dates
+
+hive (default)> select current_date;
+OK
+2018-07-11
+Time taken: 0.082 seconds, Fetched: 1 row(s)
+hive (default)> select current_timestamp;
+OK
+2018-07-11 10:52:59.598
+Time taken: 0.073 seconds, Fetched: 1 row(s)
+hive (default)> select date_format(current_date,'y');
+OK
+2018
+Time taken: 0.071 seconds, Fetched: 1 row(s)
+hive (default)> select date_format(current_date,'d');
+OK
+11
+Time taken: 0.225 seconds, Fetched: 1 row(s)
+hive (default)> select date_format(current_date,'D');
+OK
+192
+Time taken: 0.065 seconds, Fetched: 1 row(s)
+hive (default)> select day(current_date);
+OK
+11
+Time taken: 0.075 seconds, Fetched: 1 row(s)
+hive (default)> select dayofmonth(current_date);
+OK
+11
+hive (default)> select to_date(current_timestamp);
+OK
+2018-07-11
+hive (default)> select to_unix_timestamp(current_date);
+OK
+1531267200
+Time taken: 0.081 seconds, Fetched: 1 row(s)
+hive (default)> select to_unix_timestamp(current_timestamp);
+OK
+1531307042
+hive (default)> select from_unixtime(1531307042);
+OK
+2018-07-11 11:04:02
+Time taken: 0.072 seconds, Fetched: 1 row(s)
+hive (default)> select to_date(from_unixtime(1531307042));
+OK
+2018-07-11
+hive (default)> select to_date(order_date) from orders limit 10;
+OK
+NULL
+NULL
+NULL
+NULL
+NULL
+2013-07-25
+2013-07-25
+2013-07-25
+2013-07-25
+2013-07-25
+Time taken: 0.051 seconds, Fetched: 10 row(s)
+hive (default)> select date_add(order_date,10) from orders limit 10;
+OK
+NULL
+NULL
+NULL
+NULL
+NULL
+2013-08-04
+2013-08-04
+2013-08-04
+2013-08-04
+2013-08-04
+
+Aggregating Functions
+
+hive (default)> select sum(order_status) from orders;
+Query ID = anjanvlsi8432_20180711122156_040c3032-1fa4-4230-8006-4f0eabce9b61
+Total jobs = 1
+Launching Job 1 out of 1
+
+
+Status: Running (Executing on YARN cluster with App id application_1527045214830_8448)
+
+--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED      2          2        0        0       0       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 5.30 s     
+--------------------------------------------------------------------------------
+OK
+9.0
+Time taken: 7.039 seconds, Fetched: 1 row(s)
+select min(order_status),max(order_status) from orders;
+Query ID = anjanvlsi8432_20180711122401_9d2de69a-fef3-4f6a-a9e4-143b3a721438
+Total jobs = 1
+Launching Job 1 out of 1
+
+
+Status: Running (Executing on YARN cluster with App id application_1527045214830_8448)
+
+--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED      2          2        0        0       0       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 4.68 s     
+--------------------------------------------------------------------------------
+OK
+1       completed
+hive (default)> select count(1), order_status from orders group by order_status;
+Query ID = anjanvlsi8432_20180711122513_d5f309e2-abcc-4691-b46d-cf2bd2eaa157
+Total jobs = 1
+Launching Job 1 out of 1
+
+
+Status: Running (Executing on YARN cluster with App id application_1527045214830_8448)
+
+--------------------------------------------------------------------------------
+        VERTICES      STATUS  TOTAL  COMPLETED  RUNNING  PENDING  FAILED  KILLED
+--------------------------------------------------------------------------------
+Map 1 ..........   SUCCEEDED      2          2        0        0       0       0
+Reducer 2 ......   SUCCEEDED      1          1        0        0       0       0
+--------------------------------------------------------------------------------
+VERTICES: 02/02  [==========================>>] 100%  ELAPSED TIME: 4.46 s     
+--------------------------------------------------------------------------------
+OK
+2       1
+2       2
+1       3
+1428    CANCELED
+7556    CLOSED
+22899   COMPLETE
+1       DUMMY
+3798    ON_HOLD
+1       OPEN
+729     PAYMENT_REVIEW
+7610    PENDING
+15030   PENDING_PAYMENT
+8275    PROCESSING
+1558    SUSPECTED_FRAUD
+1       completed
+Time taken: 4.787 seconds, Fetched: 15 row(s)
+
+
+Case Statement:
+
+hive (default)> select case order_status when 'CLOSED' then 'No action' when 'COMPLETE' then 'No action' else 'Take some action' end from orders limit
+ 50;
+
+Row-level transformations
+
+create table ord_anj
+(
+order_id             int,
+order_date         timestamp,   
+order_customer_id  int,    
+order_status       varchar(20), 
+time_updated       timestamp 
+) row format delimited fields terminated by ',' stored as textfile;
+
+load data inpath '/user/anjanvlsi8432/sqoop_import/retail_db/orders' into table ord_anj;
+
+hive (default)> select cast(concat(substr(order_date,1,4),substr(order_date,6,2))as int)  from ord_anj limit 10;
+OK
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+Time taken: 0.079 seconds, Fetched: 10 row(s)
+hive (default)> 
+or
+
+hive (default)> select cast(date_format(order_date,'YYYYMM')as int) from ord_anj limit 10;
+OK
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+201307
+
+Joining data from multiple tables
+
+
+create table orditem_anj(
+order_item_id             int,
+order_item_order_id       int,
+order_item_product_id    int,
+order_item_quantity       int,
+order_item_subtotal       double,
+order_item_product_price  double
+) row format delimited fields terminated by ',' stored as textfile;
+
+load data inpath '/user/anjanvlsi8432/sqoop_import/retail_db/order_items' into table orditem_anj;
+
+hive (default)> select c.customer_fname,c.customer_lname from cust_anj c join ord_anj o on c.customer_id=o.order_customer_id limit 10;
+
+hive (default)> select c.customer_fname,c.customer_lname,o.order_id from cust_anj c right join ord_anj o on c.customer_id=o.order_customer_id limit 10
+0;
+
+
+Aggregations
+
+hive (default)> select count(1) from ord_anj;
+hive (default)> select order_status ,count(1) from ord_anj group by order_status;
+hive (default)> select  o.order_id,sum(i.order_item_subtotal) from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id group by o.order_i
+d limit 10;
+
+Sorting data
+
+hive (default)> select  o.order_id,sum(i.order_item_subtotal) from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id group by o.order_i
+d order by o.order_id limit 10;
+
+hive (default)> select  o.order_id,sum(i.order_item_subtotal) rev from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id group by o.ord
+er_id 
+              > distribute by o.order_id
+              > sort by o.order_id,rev limit 10;
+
+
+Spark SQL – Analytics and Windowing Functions
+
+
+select o.order_id,o.order_date,o.order_status, round(sum(i.order_item_subtotal),2) 
+from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id
+where o.order_status in ('COMPLETE','CLOSED')
+group by o.order_id,o.order_date,o.order_status 
+order by o.order_date;
+
+select o.order_id,o.order_date,o.order_status, round(sum(i.order_item_subtotal) rev over (partition by o.order_id),2) 
+from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id
+where o.order_status in ('COMPLETE','CLOSED')
+order by o.order_date;
+
+select * from (
+select o.order_id,o.order_date,o.order_status, round(sum(i.order_item_subtotal) over (partition by o.order_id),2) rev
+from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id
+where o.order_status in ('COMPLETE','CLOSED') )p
+where p.rev>1000
+order by order_date;
+
+select * from (
+select o.order_id,o.order_date,o.order_status, round(sum(i.order_item_subtotal) over (partition by o.order_id),2) rev,
+rank() over(partition by o.order_id order by i.order_item_subtotal desc) rnk_rev,
+dense_rank() over(partition by o.order_id order by i.order_item_subtotal desc) dns_rnk_rev,
+percent_rank() over(partition by o.order_id order by i.order_item_subtotal desc) prcnt_rnk_rev,
+row_number() over(partition by o.order_id) rn_rev,
+row_number() over(partition by o.order_id order by i.order_item_subtotal desc) rn_ord_rev
+from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id
+where o.order_status in ('COMPLETE','CLOSED') )p
+where p.rev>1000
+order by order_date;
+
+Windowing function
+
+select * from (
+select o.order_id,o.order_date,o.order_status, round(sum(i.order_item_subtotal) over (partition by o.order_id),2) rev,
+rank() over(partition by o.order_id order by i.order_item_subtotal desc) rnk_rev,
+dense_rank() over(partition by o.order_id order by i.order_item_subtotal desc) dns_rnk_rev,
+percent_rank() over(partition by o.order_id order by i.order_item_subtotal desc) prcnt_rnk_rev,
+row_number() over(partition by o.order_id) rn_rev,
+row_number() over(partition by o.order_id order by i.order_item_subtotal desc) rn_ord_rev,
+lead(i.order_item_subtotal) over (partition by o.order_id) ld_rev,
+lag(i.order_item_subtotal) over (partition by o.order_id) lg_rev
+from ord_anj o join orditem_anj i on o.order_id=i.order_item_order_id
+where o.order_status in ('COMPLETE','CLOSED') )p
+where p.rev>1000
+order by order_date;
+
+Spark SQL – Processing data using Data Frames
+Create Data Frame and Register as a temp table
+
+
+need to import one class from pyspark library
+
+sqlContext.sql("select * from default.ord_anj")
+sqlContext.sql("select * from default.ord_anj").show()
+sqlContext.sql("select * from default.ord_anj").printSchema()
+
+Process data:
+
+from pyspark.sql import Row
+ordersRDD=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/orders")
+orderDF=ordersRDD.map(lambda p: Row(order_id=int(p.split(",")[0]),order_date=p.split(",")[1],order_status=p.split(",")[3])).toDF()
+orderDF.registerTempTable("orders")
+
+prodRDD=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/products")
+
+product_id          | int(11)      | NO   | PRI | NULL    | auto_increment |
+| product_category_id | int(11)      | NO   |     | NULL    |                |
+| product_name        | varchar(45)  | NO   |     | NULL    |                |
+| product_description | varchar(255) | NO   |     | NULL    |                |
+| product_price       | float        | NO   |     | NULL    |                |
+| product_image       | varchar(255) | NO   
+
+prodDF=prodRDD.map(lambda x: Row(product_id=int(x.split(",")[0]),product_category_id=int(x.split(",")[1]),product_name=x.split(",")[2],
+		         	 product_description=x.split(",")[3],product_price=float(x.split(",")[4]),product_image=x.split(",")[5])).toDF()
+register temp table:
+
+prodDF.registerTempTable("products")
+sqlContext.sql("select * from products").show()
+
+if we have to read the data from local FS, then use python 
+
+prodraw=open("/home/anjanvlsi8432/anjan/products/part-m-00000").read().splitlines()
+prodRDD=sc.parallelize(prodraw)
+
+sqlContext.setConf("spark.sql.shuffle.partitions","2")
+sqlContext.sql("select o.order_date,p.product_name, sum(i.order_item_subtotal) daily_rev \
+from  orders o join orditem_anj i on o.order_id=i.order_item_order_id \
+join products p on i.order_item_product_id=p.product_id \
+where o.order_status in ('COMPLETE') \
+group by o.order_date,p.product_name \
+order by o.order_date,p.product_name desc").show()
+
+sqlContext.setConf("spark.sql.shuffle.partitions","2")
+sqlContext.sql("select o.order_date, round(sum(i.order_item_subtotal),2) daily_rev \
+from  orders o join orditem_anj i on o.order_id=i.order_item_order_id \
+where o.order_status in ('COMPLETE') \
+group by o.order_date \
+order by o.order_date desc").show()
+
+Saving Data Frame:
+
+sqlContext.sql("create database anjanvlsi_daily_rev")
+
+sqlContext.sql("create table anjanvlsi_daily_rev.daily_rev(order_date string, rev float) STORED AS orc")
+
+sqlContext.sql("select * from anjanvlsi_daily_rev.daily_rev").show()
+
+daily_rev_DF=sqlContext.sql("select o.order_date, round(sum(i.order_item_subtotal),2) daily_rev \
+from  orders o join orditem_anj i on o.order_id=i.order_item_order_id \
+where o.order_status in ('COMPLETE') \
+group by o.order_date \
+order by o.order_date desc")
+
+daily_rev_DF.insertInto("anjanvlsi_daily_rev.daily_rev")
+sqlContext.sql("select * from anjanvlsi_daily_rev.daily_rev").show()
+or
+daily_rev_DF.saveAsTable("anjanvlsi_daily_rev.daily_rev2")
+sqlContext.sql("select * from anjanvlsi_daily_rev.daily_rev2").show()
+
+Data Frame Operations:
+
+daily_rev_DF.show(100)
+daily_rev_DF.printSchema()
+
+daily_rev_DF.save("/user/anjanvlsi8432/sqoop_import/retail_db/dialy_rev","json")
+daily_rev_DF.write.json("/user/anjanvlsi8432/sqoop_import/retail_db/dialy_rev")
+
+hadoop fs -tail /user/anjanvlsi8432/sqoop_import/retail_db/dialy_rev/part-r-00000-4e2e9f44-12bd \
+-4d04-a9e0-91e8d2075b29
+
+
+
+
+
+
