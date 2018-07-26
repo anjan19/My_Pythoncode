@@ -1,0 +1,54 @@
+create table dlybulkdls
+(dealdt timestamp,
+ symbol string,
+ secname string,
+ clntname string,
+ bsflag   string,
+ qty      int,
+ tradeprice float) 
+row format delimited fields terminated by ',' stored as textfile;
+
+load data inpath '/user/anjanvlsi8432/nse' into table dlybulkdls;
+
+select symbol,secname,count(bsflag),sum(tradeprice)
+ from dlybulkdls
+ group by symbol,secname 
+ order by symbol,secname;
+
+create external table dlybulkdls_ext
+(dealdt timestamp,
+ symbol string,
+ secname string,
+ clntname string,
+ bsflag   string,
+ qty      int,
+ tradeprice float) 
+row format delimited fields terminated by ','
+location '/user/anjanvlsi8432/nse_ext';
+
+partitioned by (bsflag string)
+
+
+create table dlybulkdls_part
+(dealdt timestamp,
+ symbol string,
+ secname string,
+ clntname string,
+ qty      int,
+ tradeprice float) 
+ partitioned by(bsflag  string)
+ row format delimited fields terminated by ',' 
+ stored as textfile;
+
+clustered by (symbol) into 10 buckets
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.dynamic.partition=true;
+set hive.enforce.bucketing=true;
+
+select symbol,tradeprice,dense_rank() over(order by tradeprice desc) as rnk 
+from dlybulkdls where symbol='CKPPRODUCT';
+
+select * from (
+select symbol,tradeprice,rank() over(order by tradeprice desc) as rnk 
+from dlybulkdls where symbol='CKPPRODUCT')p where p.rnk=10;
