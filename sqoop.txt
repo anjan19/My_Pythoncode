@@ -1,0 +1,32 @@
+***Spark******
+
+To inialize  pyspark job
+
+pyspark --master yarn --conf spark.ui.port=12888
+
+categories 
+customers 
+departments 
+employees 
+order_items 
+orders 
+products 
+
+now import data using sqoop from retail_db of mysql to HDFS
+
+sqoop import \
+--connect "jdbc:mysql://ip-172-31-13-154:3306/retail_db" \
+--username sqoopuser \
+--password NHkkP876rp \
+--table departments \
+--warehouse-dir /user/anjanvlsi8432/sqoop_import/retail_db \
+--num-mappers 1 
+
+creating RDD for order_items
+
+OrderItems=sc.textFile("/user/anjanvlsi8432/sqoop_import/retail_db/order_items")
+
+to see first items in RDD
+OrderItems.first()= 
+orderitems.take(10) 
+for i in OrderItems.take(10): print(i)
