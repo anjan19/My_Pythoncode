@@ -66,7 +66,7 @@ def update_item(itm_typ,itm_nm,itm_prc):
         print(itm_typ+': This item category is not available in  store')
     data_write_file(add_dict)
 
-update_item('phone','redmi1',3500.0)     
+#update_item('phone','redmi1',3500.0)     
         
 def delete_item(itm_typ,itm_nm,itm_prc):
     add_dict=data_read_file()
@@ -86,4 +86,4 @@ def delete_item(itm_typ,itm_nm,itm_prc):
         print(itm_typ+': This item category is not available in  store')
     data_write_file(add_dict)
     
-delete_item('vegetable','tomoto',20.0) 
+#delete_item('vegetable','tomoto',20.0)
