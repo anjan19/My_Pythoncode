@@ -32,7 +32,7 @@ def hello_pubsub(event, context):
   
       fn='MTO_'+m_day+m_mn+str(now.year)+'.DAT'
       fn2=m_day+now.strftime("%b").upper()+str(now.year)
-      url='https://www1.nseindia.com/archives/equities/mto/'+fn
+      url='https://archives.nseindia.com/archives/equities/mto/'+fn
       #print(url)
 
       def web_download(url,ospath,file):
@@ -49,12 +49,12 @@ def hello_pubsub(event, context):
           print("The file does not exist")
 
       file_remove(home_path + "/*.csv")
-#file_remove("/home/anjangcp7861/swdp.csv")
+      #file_remove("/home/anjangcp7861/swdp.csv")
 
       web_download(url,home_path,"swtd.csv")
 
       url='https://www1.nseindia.com/content/historical/EQUITIES/'+str(now.year)+'/'+now.strftime("%b").upper()+'/cm'+fn2+'bhav.csv.zip'
-#print(url)
+      #print(url)
 
       web_download(url,home_path,"swdp.csv")
     
@@ -65,16 +65,30 @@ def hello_pubsub(event, context):
       os.replace(home_path + "/cm"+m_day+now.strftime("%b").upper()+str(now.year)+"bhav.csv",home_path + "/swdp.csv")
 
       df_d = pd.read_csv(home_path + '/swtd.csv',skiprows = 4)
-      df_d.columns=['REC_TYPE','SR_NO','SYMBOL','SCR_TYPE','TRD_QTY','DLVRY_QTY','DLVRY_TO_TRD_PERC']
-      df_h = pd.read_csv(home_path+ '/swdp.csv')
-      df_join = pd.merge(df_h, df_d, how='inner', on = 'SYMBOL')
-      df_res = df_join[['SYMBOL','TIMESTAMP','PREVCLOSE','OPEN','HIGH','LOW','CLOSE','TOTTRDQTY','DLVRY_QTY','DLVRY_TO_TRD_PERC']]
-
-      pandas_gbq.to_gbq(df_res,
-              'stock_data.company_daywise_ohlc', 
+      df_d.columns=['REC_TYPE','SR_NO','SYMBOL','SCR_TYPE','TOTTRDQTY','DLVRYQTY','DLVRYTOTRDPERC']
+      df_d = df_d[df_d['SCR_TYPE'] == 'EQ']
+      df_d = df_d[['SYMBOL','TOTTRDQTY','DLVRYQTY','DLVRYTOTRDPERC']]
+      df_d['TRADEDATE'] = pd.NaT
+      df_d['TRADEDATE'] = now.strftime('%d-%b-%Y')
+      #print(df_d)
+      pandas_gbq.to_gbq(df_d,
+              'stock_data.company_daywise_trd_dlvry', 
                project,
                chunksize=1000, 
                if_exists='append'
             )
+
+      df_h = pd.read_csv(home_path+ '/swdp.csv')
+      df_h = df_h[df_h['SERIES'] == 'EQ']
+      df_h = df_h[['SYMBOL','TIMESTAMP','PREVCLOSE','OPEN','HIGH','LOW','CLOSE']]
+      df_h.columns = ['SYMBOL','TRADEDATE','PREVCLOSE','OPEN','HIGH','LOW','CLOSE']
+      #print(df_h)
+      pandas_gbq.to_gbq(df_h,
+              'stock_data.company_daywise_ohlc_daily', 
+               project,
+               chunksize=1000, 
+               if_exists='append'
+            )
+    
     else:
-      print('No event triggered')  
+      print('No event triggered') 
